@@ -1,0 +1,17 @@
+path: ./VisDrone2019
+train: images/train
+val: images/val
+test: images/test
+
+nc: 5
+names:
+  0: person
+  1: vehicle
+  2: fire
+  3: smoke
+  4: debris
+
+# VisDrone2019 original classes mapped to Kairos classes:
+# pedestrian/people -> person
+# bicycle/car/van/truck/tricycle/awning-tricycle/motor/bus -> vehicle
+# fire/smoke/debris are initialized but have no samples in VisDrone.

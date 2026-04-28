@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.env
+
+# Next.js
+node_modules/
+.next/
+out/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project Specific
+backend/assets/*.mp4
+!backend/assets/visdrone_demo.mp4
+training/VisDrone2019/
+training/visdrone_test/
+training/runs/
+training/results/
+training/*.zip
+training/*.pt
+runs/
+models/*.pt
+!models/yolov8s.pt
+*.pt
+*.avi
+*.mp4
+dev.db
+dev.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# OS files
+.DS_Store
+Thumbs.db

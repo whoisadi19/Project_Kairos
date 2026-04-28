@@ -1,0 +1,24 @@
+generator client {
+  provider             = "prisma-client-py"
+  interface            = "asyncio"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Detection {
+  id         Int      @id @default(autoincrement())
+  timestamp  DateTime @default(now())
+  class_name String
+  confidence Float
+  triage     String?
+  lat        Float
+  lng        Float
+  x          Float
+  y          Float
+  w          Float
+  h          Float
+  frame_id   Int
+}

@@ -1,0 +1,340 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #090b0f;
+  --bg-panel: #10141b;
+  --bg-elevated: #151a22;
+  --bg-soft: #1b222c;
+  --border: rgba(158, 172, 191, 0.14);
+  --border-strong: rgba(158, 172, 191, 0.24);
+  --accent: #7dd3fc;
+  --accent-strong: #38bdf8;
+  --critical: #ef4444;
+  --stable: #22c55e;
+  --vehicle: #60a5fa;
+  --hazard: #f59e0b;
+  --debris: #94a3b8;
+  --text: #eef3f8;
+  --text-secondary: #a7b2c0;
+  --text-muted: #687586;
+  --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+button { font: inherit; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(167, 178, 192, 0.3); border-radius: 999px; }
+
+/* ─── Root layout ─────────────────────────────────────── */
+
+.dashboard-root {
+  display: grid;
+  grid-template-rows: 56px auto auto 1fr;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.08), transparent 34rem),
+    linear-gradient(180deg, #0d1117 0%, #090b0f 44%, #080a0d 100%);
+}
+
+/* ─── Main shell — named grid areas ──────────────────── */
+
+.dashboard-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) minmax(0, 2fr) 300px;
+  grid-template-rows: minmax(380px, 1fr) 260px;
+  grid-template-areas:
+    "feed feed map  side"
+    "status triage event side";
+  gap: 10px;
+  padding: 10px;
+  min-height: 0;
+}
+
+.feed-panel   { grid-area: feed; }
+.map-panel    { grid-area: map; }
+.side-panel   { grid-area: side; }
+.status-panel { grid-area: status; }
+.triage-panel { grid-area: triage; }
+.event-panel  { grid-area: event; }
+
+/* ─── Panel base ─────────────────────────────────────── */
+
+.panel {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(16, 20, 27, 0.94);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
+}
+
+.feed-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eyebrow {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.panel-title {
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.feed-stage {
+  position: relative;
+  min-height: 0;
+  background: #030507;
+}
+
+.feed-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border);
+}
+
+.metric {
+  padding: 10px 14px;
+  border-right: 1px solid var(--border);
+}
+.metric:last-child { border-right: 0; }
+
+.metric-value {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.metric-label {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* ─── Control strip (filters) ────────────────────────── */
+
+.control-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10, 13, 18, 0.7);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  border: 1px solid var(--border);
+}
+
+.filter-button {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border-right: 1px solid var(--border);
+  transition: color 0.15s, background 0.15s;
+}
+.filter-button:last-child { border-right: 0; }
+.filter-button.active { background: rgba(125, 211, 252, 0.1); color: var(--accent); }
+.filter-button:hover:not(.active) { background: rgba(255,255,255,0.04); color: var(--text-secondary); }
+
+.confidence-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.confidence-control input[type="range"] {
+  accent-color: var(--accent);
+  width: 80px;
+}
+
+/* ─── Side panel / Tabs ──────────────────────────────── */
+
+.tab-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-button {
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 12px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.tab-button:last-child { border-right: 0; }
+.tab-button.active { background: rgba(125, 211, 252, 0.08); color: var(--accent); }
+
+.side-content { min-height: 0; overflow: hidden; }
+
+.map-panel, .event-panel { position: relative; }
+
+.event-panel { display: flex; flex-direction: column; }
+
+/* ─── Status pills & dots ────────────────────────────── */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  padding: 5px 9px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+.status-dot.ok   { background: var(--stable); }
+.status-dot.warn { background: var(--hazard); }
+.status-dot.bad  { background: var(--critical); }
+
+/* ─── Severity classes ───────────────────────────────── */
+
+.severity-critical { color: var(--critical); }
+.severity-stable   { color: var(--stable); }
+.severity-vehicle  { color: var(--vehicle); }
+.severity-hazard   { color: var(--hazard); }
+.severity-debris   { color: var(--debris); }
+
+/* ─── Incident queue ─────────────────────────────────── */
+
+.incident-card {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.025);
+  padding: 12px;
+  transition: border-color 0.2s;
+}
+.incident-card:hover { border-color: var(--border-strong); }
+
+.incident-action {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 5px 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.15s, color 0.15s;
+}
+.incident-action:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+.incident-action.danger { color: var(--critical); border-color: rgba(239,68,68,0.3); }
+.incident-action.danger:hover { background: rgba(239,68,68,0.1); }
+
+/* ─── Animations ─────────────────────────────────────── */
+
+.live-blink { animation: blink 1.2s ease-in-out infinite; }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes critical-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+  50%       { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0); }
+}
+.critical-pulse { animation: critical-pulse 1s ease infinite; }
+
+/* ─── Responsive ─────────────────────────────────────── */
+
+@media (max-width: 1400px) {
+  .dashboard-shell {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) 280px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-shell {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: minmax(360px, 1fr) 260px 260px 260px;
+    grid-template-areas:
+      "feed   feed"
+      "map    side"
+      "status triage"
+      "event  event";
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-root { grid-template-rows: auto auto auto 1fr; }
+
+  .dashboard-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 48vh auto auto auto auto auto;
+    grid-template-areas:
+      "feed"
+      "map"
+      "side"
+      "status"
+      "triage"
+      "event";
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .feed-strip { grid-template-columns: repeat(2, 1fr); }
+  .control-strip { gap: 8px; }
+}
