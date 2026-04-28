@@ -21,7 +21,7 @@ st.markdown("""
     .critical-alert { color: #ef4444; font-weight: bold; animation: blinker 1.5s linear infinite; }
     @keyframes blinker { 50% { opacity: 0; } }
     </style>
-    """, unsafe_allow_name=True)
+    """, unsafe_allow_html=True)
 
 # --- LOGIC CLASSES (Mirrored from backend) ---
 class TriageTracker:
