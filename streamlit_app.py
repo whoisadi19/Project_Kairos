@@ -14,14 +14,94 @@ st.set_page_config(page_title="Kairos Tactical Dashboard", layout="wide", initia
 
 st.markdown("""
     <style>
-    .main { background-color: #090b0f; color: #eef3f8; }
-    .stMetric { background-color: #10141b; border: 1px solid #1b222c; padding: 10px; border-radius: 5px; }
-    .stSidebar { background-color: #10141b; }
-    h1, h2, h3 { color: #7dd3fc !important; font-family: 'Inter', sans-serif; }
-    .critical-alert { color: #ef4444; font-weight: bold; animation: blinker 1.5s linear infinite; }
-    @keyframes blinker { 50% { opacity: 0; } }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+    
+    /* Global Theme */
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+    .stApp {
+        background-color: #090b0f;
+        background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #090b0f 70%);
+        color: #eef3f8;
+    }
+    
+    /* Hide Streamlit Chrome */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background-color: rgba(16, 20, 27, 0.8) !important;
+        border-right: 1px solid #1e293b;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Headings */
+    h1, h2, h3 { 
+        color: #38bdf8 !important; 
+        font-weight: 800 !important;
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+    }
+    
+    /* Metrics / Status Cards */
+    [data-testid="stMetric"] {
+        background-color: rgba(15, 23, 42, 0.6);
+        border: 1px solid #334155;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        font-family: 'JetBrains Mono', monospace;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+        color: #e2e8f0;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+    
+    /* Dataframes/Tables */
+    [data-testid="stDataFrame"] {
+        background-color: rgba(15, 23, 42, 0.5);
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+    }
+    
+    /* Critical Alerts */
+    .critical-alert { 
+        color: #ef4444; 
+        font-weight: bold; 
+        font-family: 'JetBrains Mono', monospace;
+        background: rgba(239, 68, 68, 0.1);
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ef4444;
+        animation: pulse 1.5s infinite; 
+    }
+    .secure-alert {
+        color: #22c55e;
+        font-weight: bold;
+        font-family: 'JetBrains Mono', monospace;
+        background: rgba(34, 197, 94, 0.1);
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #22c55e;
+    }
+    
+    @keyframes pulse { 
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
     </style>
     """, unsafe_allow_html=True)
+
 
 # --- LOGIC CLASSES (Mirrored from backend) ---
 class TriageTracker:
@@ -79,16 +159,16 @@ with col4:
     st.metric("Uptime", "10:24", delta="+01:00")
 
 # --- MAIN LAYOUT ---
-main_col, side_col = st.columns([2, 1])
+main_col, side_col = st.columns([5, 3])
 
 with main_col:
     st.markdown("### 🚁 Aerial Observation Feed")
     video_placeholder = st.empty()
-    
-    st.markdown("### 🗺️ Tactical Map")
-    map_placeholder = st.empty()
 
 with side_col:
+    st.markdown("### 🗺️ Tactical Map")
+    map_placeholder = st.empty()
+    
     st.markdown("### 🚨 Incident Queue")
     incident_placeholder = st.empty()
     
@@ -174,7 +254,7 @@ def run_app():
             for d in detections:
                 folium.CircleMarker([d["lat"], d["lng"]], radius=5, color="red" if d["triage"]=="CRITICAL" else "blue", fill=True).add_to(m)
             with map_placeholder:
-                st_folium(m, height=300, width=700, key=f"map_{frame_id}")
+                st_folium(m, height=350, use_container_width=True, key=f"map_{frame_id}", returned_objects=[])
 
         time.sleep(0.01)
 
