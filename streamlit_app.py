@@ -177,10 +177,17 @@ with side_col:
 
 # --- STREAMING LOGIC ---
 def run_app():
-    # Use a dummy video or camera for demo
+    if "frame_id" not in st.session_state:
+        st.session_state.frame_id = 0
+        
+    colA, colB = st.columns([1, 4])
+    with colA:
+        if st.button("📸 Analyze Next Snapshot", use_container_width=True):
+            st.session_state.frame_id += 30 # skip 1 second ahead
+            
     # Robust path finding for Streamlit Cloud
-    video_source = 0 if mode == "Live RTSP Stream" else "backend/assets/visdrone_demo.mp4"
-    if mode != "Live RTSP Stream" and not os.path.exists(str(video_source)):
+    video_source = "backend/assets/visdrone_demo.mp4"
+    if not os.path.exists(str(video_source)):
         # Try local path if relative fails
         video_source = "visdrone_demo.mp4"
         if not os.path.exists(str(video_source)):
@@ -188,75 +195,71 @@ def run_app():
             return
 
     cap = cv2.VideoCapture(video_source)
-    frame_id = 0
+    cap.set(cv2.CAP_PROP_POS_FRAMES, st.session_state.frame_id)
+    ret, frame = cap.read()
     
-    while cap.isOpened():
+    if not ret: 
+        st.session_state.frame_id = 0
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         ret, frame = cap.read()
-        if not ret: 
-            if mode == "Demo (Recorded)": cap.set(cv2.CAP_PROP_POS_FRAMES, 0); continue
-            else: break
             
-        frame_id += 1
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        h, w = img.shape[:2]
+    img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    h, w = img.shape[:2]
+    
+    # Inference
+    results = model(img, conf=conf_threshold, iou=iou_threshold, verbose=False)[0]
+    
+    detections = []
+    active_ids = set()
+    
+    for box in results.boxes:
+        cls_id = int(box.cls[0])
+        class_name = model.names[cls_id]
+        if class_name not in enabled_classes: continue
         
-        # Inference
-        results = model(img, conf=conf_threshold, iou=iou_threshold, verbose=False)[0]
+        x1, y1, x2, y2 = box.xyxy[0].tolist()
+        conf = float(box.conf[0])
+        cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
         
-        detections = []
-        active_ids = set()
+        track_id = f"{cls_id}_{int(cx // 50)}_{int(cy // 50)}"
+        active_ids.add(track_id)
         
-        for box in results.boxes:
-            cls_id = int(box.cls[0])
-            class_name = model.names[cls_id]
-            if class_name not in enabled_classes: continue
-            
-            x1, y1, x2, y2 = box.xyxy[0].tolist()
-            conf = float(box.conf[0])
-            cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
-            
-            track_id = f"{cls_id}_{int(cx // 50)}_{int(cy // 50)}"
-            active_ids.add(track_id)
-            
-            triage = triage_tracker.get_triage(track_id, cx, cy, class_name)
-            lat, lng = pixel_to_gps(cx, cy, w, h)
-            
-            detections.append({
-                "label": f"{class_name.upper()} {triage if triage else ''}",
-                "conf": conf,
-                "box": [x1, y1, x2, y2],
-                "color": (239, 68, 68) if triage == "CRITICAL" else (34, 197, 94) if triage == "STABLE" else (96, 165, 250),
-                "lat": lat, "lng": lng, "class": class_name, "triage": triage
-            })
+        triage = triage_tracker.get_triage(track_id, cx, cy, class_name)
+        lat, lng = pixel_to_gps(cx, cy, w, h)
         
-        # Draw
-        for d in detections:
-            x1, y1, x2, y2 = map(int, d["box"])
-            cv2.rectangle(img, (x1, y1), (x2, y2), d["color"], 3)
-            cv2.putText(img, d["label"], (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, d["color"], 2)
-            
-        # Update UI
-        video_placeholder.image(img, use_column_width=True)
+        detections.append({
+            "label": f"{class_name.upper()} {triage if triage else ''}",
+            "conf": conf,
+            "box": [x1, y1, x2, y2],
+            "color": (239, 68, 68) if triage == "CRITICAL" else (34, 197, 94) if triage == "STABLE" else (96, 165, 250),
+            "lat": lat, "lng": lng, "class": class_name, "triage": triage
+        })
+    
+    # Draw
+    for d in detections:
+        x1, y1, x2, y2 = map(int, d["box"])
+        cv2.rectangle(img, (x1, y1), (x2, y2), d["color"], 3)
+        cv2.putText(img, d["label"], (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, d["color"], 2)
         
-        critical_count = len([d for d in detections if d["triage"] == "CRITICAL"])
-        if critical_count > 0:
-            critical_placeholder.markdown(f"<div class='critical-alert'>🚨 {critical_count} CRITICAL INCIDENTS</div>", unsafe_allow_html=True)
-        else:
-            critical_placeholder.markdown("<div style='color: #22c55e'>✅ AREA SECURE</div>", unsafe_allow_html=True)
-            
-        # Triage Summary
-        summary_df = { "Class": [d["label"] for d in detections], "Confidence": [f"{d['conf']:.2f}" for d in detections] }
-        triage_placeholder.table(summary_df)
+    # Update UI
+    video_placeholder.image(img, use_column_width=True)
+    
+    critical_count = len([d for d in detections if d["triage"] == "CRITICAL"])
+    if critical_count > 0:
+        critical_placeholder.markdown(f"<div class='critical-alert'>🚨 {critical_count} CRITICAL INCIDENTS</div>", unsafe_allow_html=True)
+    else:
+        critical_placeholder.markdown("<div style='color: #22c55e'>✅ AREA SECURE</div>", unsafe_allow_html=True)
         
-        # Map (update every 30 frames to avoid lag)
-        if frame_id % 30 == 0:
-            m = folium.Map(location=[19.9975, 73.7898], zoom_start=15, tiles="CartoDB dark_matter")
-            for d in detections:
-                folium.CircleMarker([d["lat"], d["lng"]], radius=5, color="red" if d["triage"]=="CRITICAL" else "blue", fill=True).add_to(m)
-            with map_placeholder:
-                st_folium(m, height=350, use_container_width=True, key=f"map_{frame_id}", returned_objects=[])
-
-        time.sleep(0.01)
+    # Triage Summary
+    summary_df = { "Class": [d["label"] for d in detections], "Confidence": [f"{d['conf']:.2f}" for d in detections] }
+    triage_placeholder.table(summary_df)
+    
+    # Map
+    m = folium.Map(location=[19.9975, 73.7898], zoom_start=15, tiles="CartoDB dark_matter")
+    for d in detections:
+        folium.CircleMarker([d["lat"], d["lng"]], radius=5, color="red" if d["triage"]=="CRITICAL" else "blue", fill=True).add_to(m)
+    with map_placeholder:
+        st_folium(m, height=350, use_container_width=True, key=f"map_{st.session_state.frame_id}", returned_objects=[])
 
 if __name__ == "__main__":
     run_app()
