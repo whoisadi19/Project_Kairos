@@ -98,10 +98,14 @@ with side_col:
 # --- STREAMING LOGIC ---
 def run_app():
     # Use a dummy video or camera for demo
+    # Robust path finding for Streamlit Cloud
     video_source = 0 if mode == "Live RTSP Stream" else "backend/assets/visdrone_demo.mp4"
-    if not os.path.exists(str(video_source)) and mode != "Live RTSP Stream":
-        st.error(f"Demo video not found at {video_source}")
-        return
+    if mode != "Live RTSP Stream" and not os.path.exists(str(video_source)):
+        # Try local path if relative fails
+        video_source = "visdrone_demo.mp4"
+        if not os.path.exists(str(video_source)):
+            st.error("Demo video not found. Please ensure 'backend/assets/visdrone_demo.mp4' is in the repository.")
+            return
 
     cap = cv2.VideoCapture(video_source)
     frame_id = 0
