@@ -50,7 +50,9 @@ models/*.pt
 !models/yolov8s.pt
 *.pt
 *.avi
-*.mp4
+# Allow specific demo video
+!backend/assets/visdrone_demo.mp4
+
 dev.db
 dev.db-journal
 prisma/dev.db
