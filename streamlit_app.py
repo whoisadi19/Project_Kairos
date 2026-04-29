@@ -22,7 +22,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Placeholder URL. Will update after Vercel deployment.
-VERCEL_URL = "https://kairos-placeholder-wait-for-vercel.vercel.app"
+# Final Production Vercel URL
+VERCEL_URL = "https://frontend-lac-two-77.vercel.app"
 
 components.iframe(VERCEL_URL, height=1000, scrolling=True)
